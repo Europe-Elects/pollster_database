@@ -40,7 +40,7 @@ const MODES = [
   ["robot", "Automated calls", /\bIVR\b|automated|robo[- ]?call/i],
   ["mix", "Mixed mode", /mixed[- ]mode|dual[- ]frame|polling[- ]mix|multi[- ]mode/i],
 ];
-const NONE = /^(not identified|none( known| identified| found)?|no|n\/?a|-|–|unknown|not stated|not known|\?)\.?$/i;
+const NONE = /^(not identified|none( known| identified| found)?|no|n\/?a|-|–|unknown|unkown|not stated|not known|\?)\.?$/i;
 const known = v => { v = clean(v); return !!v && !NONE.test(v); };
 
 const $ = s => document.querySelector(s);
@@ -90,14 +90,14 @@ function moeOf(m) {
 // Why a pollster is not republished. A "Reason not republished" column in the sheet wins;
 // otherwise the reason is read from what the researchers wrote in the notes and other fields.
 const REASONS = [
-  ["Organisation not verifiable", "We could not verify that this organisation exists or carries out its own fieldwork.",
-    /non[- ]?existing|does(?:n'?t| not) exist|no indication (?:that )?(?:this|the|it)[^.]{0,30}exists?|could not (?:be )?(?:found|verified|identified)|not a pollster|fake poll|fictitious/i],
+  ["Organisation not verifiable", "We could not verify that this organisation exists, is registered or carries out its own fieldwork.",
+    /non[- ]?existing|does(?:n'?t| not) exist|never (?:formally )?existed|no indication (?:that )?(?:this|the|it)[^.]{0,30}exists?|could not (?:be )?(?:found|verified|identified)|not (?:being )?obtainable|not recognised by|not registered|phantom|no evidence that[^.]{0,40}(?:conducts|carries out|exists)|not a pollster|fake poll|fictitious|no website or address|information (?:is|are) unavailable/i],
   ["Methodology not disclosed", "The organisation does not disclose how its polls are conducted or weighted.",
-    /black box|didn'?t provide any information|did not provide (?:any )?information|no information (?:provided|available|on (?:the )?method)|doesn'?t answer|does not answer|did not (?:respond|answer)|no response|(?:algorithm|weighting|method\w*)[^.]{0,40}not (?:been )?(?:published|disclosed)|not disclose|undisclosed|lack of transparency|not transparent/i],
+    /black box|didn'?t provide any information|did not provide (?:any )?information|no information (?:provided|available|on (?:the )?method)|doesn'?t answer|does not answer|did not (?:respond|answer)|no response|(?:algorithm|weighting|method\w*)[^.]{0,40}not (?:been )?(?:published|disclosed)|not disclose|undisclosed|unclear methodology|lack of transparency|not transparent/i],
   ["Sample not representative", "Its samples are self-selected or otherwise not shown to be representative.",
-    /self[- ]?select|non[- ]?probability|non[- ]?representative|not representative|opt[- ]in|questions? (?:the )?representativ/i],
-  ["No recent electoral polling", "The organisation has no recent record of pre-election polling.",
-    /not active|inactive|no longer (?:active|publish|conduct)|ceased|no (?:pre[- ]election )?track record|no record in pre[- ]election|no pre[- ]election polls/i],
+    /self[- ]?select|self[- ]?recruit|non[- ]?probability|non[- ]?representative|not representative|opt[- ]in|questions? (?:the )?representativ/i],
+  ["No recent electoral polling", "The organisation no longer exists or has no recent record of pre-election polling.",
+    /not active|inactive|no longer (?:exists|active|publish|conduct)|ceased|deregistered|limited activity|no (?:pre[- ]election )?track record|no record in pre[- ]election|no pre[- ]election polls/i],
 ];
 function reasonsOf(o) {
   const given = clean(o["Reason not republished"]);

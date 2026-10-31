@@ -1,6 +1,6 @@
 # Truth in Polling
 
-Europe Elects' database of pollsters as an interactive page, in the same style as the Party Atlas. It is hosted on GitHub Pages and rebuilt every day from the Google Sheet (one tab per country).
+Europe Elects' database of pollsters as an interactive page, in the same style as the Party Atlas. It is hosted on GitHub Pages. The data comes from `data/eetip-summary.csv`, the public Truth in Polling summary table (one row per pollster, country in the first column). To update the page, replace that file with a new export using the same column headers. If the file is removed, the workflow falls back to the Google Sheet (secret `POLLSTER_SHEET_ID`, one tab per country).
 
 ## What's in it
 
@@ -32,8 +32,8 @@ Tabs are read when their name is a country name (e.g. `Germany`) or an ISO-2 cod
 
 ## Set up
 
-1. Create the repository `Europe-Elects/pollster_database` and upload these files, including the `.github/workflows` and `scripts` folders.
-2. **Settings → Secrets and variables → Actions → New repository secret**:
+1. Create the repository `Europe-Elects/pollster_database` and upload these files, including the `.github/workflows`, `scripts` and `data` folders.
+2. Only needed for the Google Sheet: **Settings → Secrets and variables → Actions → New repository secret**:
    - name: `POLLSTER_SHEET_ID`
    - value: the ID from the sheet's address (the long code between `/d/` and `/edit`)
 
@@ -41,7 +41,7 @@ Tabs are read when their name is a country name (e.g. `Germany`) or an ISO-2 cod
 3. **Settings → Pages → Source: GitHub Actions**.
 4. **Actions → Refresh data & deploy → Run workflow**.
 
-The Google Sheet must be viewable by "anyone with the link", so the workflow can download it.
+When the Google Sheet is used, it must be viewable by "anyone with the link", so the workflow can download it.
 
 ## WordPress embed
 
