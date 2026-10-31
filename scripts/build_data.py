@@ -9,8 +9,11 @@ Header names may vary a little between tabs ("Membership:" / "Memberships", "Acc
 The sheet ID comes from the POLLSTER_SHEET_ID environment variable (a repository secret), so it never
 appears in the public repository or on the page.
 
-Usage:  POLLSTER_SHEET_ID=... python3 scripts/build_data.py site/data/pollsters.csv
-        python3 scripts/build_data.py site/data/pollsters.csv --xlsx local-copy.xlsx   (offline test)
+Usage:  python3 scripts/build_data.py site/data/pollsters.csv --csv data/eetip-summary.csv   (public summary CSV)
+        POLLSTER_SHEET_ID=... python3 scripts/build_data.py site/data/pollsters.csv           (Google Sheet)
+        python3 scripts/build_data.py site/data/pollsters.csv --xlsx local-copy.xlsx           (offline test)
+
+The summary CSV has one row per pollster and the country in its first column ("Country ID").
 """
 import csv, io, os, re, sys, urllib.request
 from openpyxl import load_workbook
@@ -19,7 +22,7 @@ from openpyxl import load_workbook
 # Never published: "Other" and any column not listed here.
 ALIASES = {
     "Pollster name": ["pollster name", "pollster", "name"],
-    "Registration year": ["registration year", "founded", "year of registration"],
+    "Registration year": ["registration year", "registration", "founded", "year of registration"],
     "Methodology": ["methodology", "methods"],
     "Key people": ["key people", "people"],
     "Accuracy": ["accuracy", "accuracy / total error", "total error"],
@@ -31,13 +34,18 @@ ALIASES = {
     "Reference": ["reference", "reference (e.g., on social media)"],
     "Presence / Experience": ["presence / experience", "presence", "experience"],
     "Notable commissioners": ["selection of notable past commissioners", "notable past commissioners", "commissioners", "clients"],
+    # Optional: why Europe Elects does not republish the pollster. Use the labels "Methodology not disclosed",
+    # "Sample not representative", "Organisation not verifiable", "No recent electoral polling" (several: separate with ";").
+    # Left empty, the page reads the reason from the notes.
+    "Reason not republished": ["reason not republished", "reason for exclusion", "exclusion reason", "reason not in coverage"],
     # Contact details: already public on the previous Truth in Polling page. Delete these two lines to stop publishing them.
     "Address": ["address", "addresses", "postal address"],
     "Email address": ["email address", "email addresses", "e-mail address", "e-mail addresses", "email", "e-mail"],
 }
 PUBLIC = list(ALIASES)
 LOOKUP = {a: canon for canon, al in ALIASES.items() for a in al}
-SKIP_TABS = {"template", "readme", "instructions", "overview", "index", "lists"}
+TAB_HEADERS = {"country id", "country", "tab"}  # country column of the summary CSV
+SKIP_TABS = {"template", "readme", "instructions", "overview", "index", "lists", "calculations", "calculation", "summary", "sources", "data"}  # helper tabs
 
 
 def norm(s):
@@ -53,8 +61,43 @@ def cell(v):
     return str(v).strip()
 
 
+def from_csv(path):
+    """Rows from the one-table summary CSV (country in the "Country ID" column)."""
+    with open(path, encoding="utf-8-sig", newline="") as fh:
+        rd = csv.reader(fh)
+        head = next(rd)
+        idx, tab = {}, None
+        for i, h in enumerate(head):
+            if norm(h) in TAB_HEADERS and tab is None:
+                tab = i
+            canon = LOOKUP.get(norm(h))
+            if canon and canon not in idx:
+                idx[canon] = i
+        if tab is None or "Pollster name" not in idx:
+            sys.exit("The CSV needs a country column (Country ID) and a pollster name column (Name)")
+        rows = []
+        for r in rd:
+            get = lambda c: cell(r[idx[c]]) if c in idx and idx[c] < len(r) else ""
+            country = cell(r[tab]) if tab < len(r) else ""
+            if not get("Pollster name") or not country or norm(country) in SKIP_TABS:
+                continue
+            rows.append({"Tab": country, **{c: get(c) for c in PUBLIC}})
+    return rows, len({r["Tab"] for r in rows})
+
+
+def write(out, rows, tabs):
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
+    with open(out, "w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=["Tab"] + PUBLIC)
+        w.writeheader()
+        w.writerows(rows)
+    print(f"{len(rows)} pollsters from {tabs} countries -> {out}")
+
+
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else "site/data/pollsters.csv"
+    if "--csv" in sys.argv:
+        return write(out, *from_csv(sys.argv[sys.argv.index("--csv") + 1]))
     if "--xlsx" in sys.argv:
         data = open(sys.argv[sys.argv.index("--xlsx") + 1], "rb").read()
     else:
@@ -86,12 +129,7 @@ def main():
             if not get("Pollster name"):
                 continue
             rows.append({"Tab": ws.title.strip(), **{c: get(c) for c in PUBLIC}})
-    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
-    with open(out, "w", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=["Tab"] + PUBLIC)
-        w.writeheader()
-        w.writerows(rows)
-    print(f"{len(rows)} pollsters from {tabs} country tabs -> {out}")
+    write(out, rows, tabs)
 
 
 if __name__ == "__main__":
