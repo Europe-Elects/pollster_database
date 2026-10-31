@@ -87,28 +87,6 @@ function moeOf(m) {
   return "";
 }
 
-// Why a pollster is not republished. A "Reason not republished" column in the sheet wins;
-// otherwise the reason is read from what the researchers wrote in the notes and other fields.
-const REASONS = [
-  ["Organisation not verifiable", "We could not verify that this organisation exists, is registered or carries out its own fieldwork.",
-    /non[- ]?existing|does(?:n'?t| not) exist|never (?:formally )?existed|no indication (?:that )?(?:this|the|it)[^.]{0,30}exists?|could not (?:be )?(?:found|verified|identified)|not (?:being )?obtainable|not recognised by|not registered|phantom|no evidence that[^.]{0,40}(?:conducts|carries out|exists)|not a pollster|fake poll|fictitious|no website or address|information (?:is|are) unavailable/i],
-  ["Methodology not disclosed", "The organisation does not disclose how its polls are conducted or weighted.",
-    /black box|didn'?t provide any information|did not provide (?:any )?information|no information (?:provided|available|on (?:the )?method)|doesn'?t answer|does not answer|did not (?:respond|answer)|no response|(?:algorithm|weighting|method\w*)[^.]{0,40}not (?:been )?(?:published|disclosed)|not disclose|undisclosed|unclear methodology|lack of transparency|not transparent/i],
-  ["Sample not representative", "Its samples are self-selected or otherwise not shown to be representative.",
-    /self[- ]?select|self[- ]?recruit|non[- ]?probability|non[- ]?representative|not representative|opt[- ]in|questions? (?:the )?representativ/i],
-  ["No recent electoral polling", "The organisation no longer exists or has no recent record of pre-election polling.",
-    /not active|inactive|no longer (?:exists|active|publish|conduct)|ceased|deregistered|limited activity|no (?:pre[- ]election )?track record|no record in pre[- ]election|no pre[- ]election polls/i],
-];
-function reasonsOf(o) {
-  const given = clean(o["Reason not republished"]);
-  if (given) return given.split(/[;\n•]|,\s*(?=[A-Z])/).map(s => s.trim()).filter(Boolean).map(label => {
-    const k = REASONS.find(([l]) => l.toLowerCase() === label.toLowerCase()); return { label: k ? k[0] : label, text: k ? k[1] : "" }; });
-  const text = [o[F.note], o[F.method], o[F.acc], o[F.presence], o[F.people], o[F.ref]].join(" \n ");
-  let hits = REASONS.filter(([, , re]) => re.test(text));
-  if (hits[0] && hits[0][0] === "Organisation not verifiable") hits = hits.slice(0, 1); // a non-existent pollster needs no further reason
-  return hits.map(([label, t]) => ({ label, text: t }));
-}
-
 function normalise(r) {
   const o = {};
   for (const k of Object.keys(r)) o[k] = clean(r[k]);
@@ -124,11 +102,10 @@ function normalise(r) {
   o._moe = moeOf(m);
   o._cov = /^y/i.test(o[F.cov]) ? "yes" : /^n/i.test(o[F.cov]) ? "no" : "";
   o._coi = known(o[F.coi]);
-  o._why = o._cov === "no" ? reasonsOf(o) : [];
   o._accUrl = (o[F.acc].match(/https?:\/\/\S+/) || [])[0] || "";
   o._site = (o[F.web].match(/https?:\/\/[^\s,;]+/) || [])[0] || (/^[\w-]+(\.[\w-]+)+/.test(o[F.web]) ? "https://" + o[F.web].split(/[\s,;]/)[0] : "");
   o._key = keyOf(o[F.name]);
-  o._search = [o[F.name], o[F.people], o[F.method], o[F.member], o[F.note], o[F.coi], o[F.clients], o._country, ...o._why.map(w => w.label)].join(" ").toLowerCase();
+  o._search = [o[F.name], o[F.people], o[F.method], o[F.member], o[F.note], o[F.coi], o[F.clients], o._country].join(" ").toLowerCase();
   return o;
 }
 
@@ -208,7 +185,6 @@ function profile(r, i) {
       ${r._est ? `<span class="est">Est. ${esc(r._est)}</span>` : ""}
     </div>
     ${out ? `<div class="off-label" title="${esc(OFF_TIP)}">Not republished by Europe Elects</div>` : ""}
-    ${r._why.length ? `<div class="why">${r._why.map(w => `<span${w.text ? ` title="${esc(w.text)}"` : ""}>${esc(w.label)}</span>`).join("")}</div>` : ""}
     ${r._modes.length ? `<div class="methods">${r._modes.map(m => `<span class="m">${icon(m.id)}${m.label}</span>`).join("")}</div>` : ""}
     ${r._sample || r._moe ? `<div class="facts">${r._sample ? `<div><b>${esc(r._sample)}</b> <span>respondents</span></div>` : ""}${r._moe ? `<div><b>${esc(r._moe)}</b> <span>margin of error</span></div>` : ""}</div>` : ""}
     ${known(r[F.people]) ? `<p class="people">${esc(r[F.people])}</p>` : ""}

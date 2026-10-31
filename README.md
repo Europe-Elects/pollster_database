@@ -12,7 +12,7 @@ Europe Elects' database of pollsters as an interactive page, in the same style a
   - sample size and margin of error, read from the methodology text;
   - key people;
   - the accuracy review, the website, and expandable details: methodology, conflict of interest, notes, memberships, contact.
-- **Name struck through in red**: Europe Elects does not republish this organisation's polls, because we could not confirm they meet our standards. A red tag under the name gives the reason: *Methodology not disclosed*, *Sample not representative*, *Organisation not verifiable* or *No recent electoral polling*. The page reads it from the notes; an optional sheet column "Reason not republished" (same labels, separated by ";") overrides that.
+- **Name struck through in red**: Europe Elects does not republish this organisation's polls, because we could not confirm they meet our standards.
 - **Yellow warning sign**: a potential conflict of interest is documented. "Not identified", "None" and similar entries don't trigger it.
 - **Filters**: search, country, potential conflicts of interest only, republished by Europe Elects only.
 - **Russia, Belarus, Azerbaijan**: when one is selected, the warning about authoritarian regimes is framed in red and repeated above that country's pollsters.
@@ -23,7 +23,6 @@ Europe Elects' database of pollsters as an interactive page, in the same style a
 `scripts/build_data.py` reads these columns, whatever their exact spelling ("Membership:" or "Memberships", "Accuracy" or "Accuracy / total error" …):
 - Pollster name, Registration year, Methodology, Key people, Accuracy, Potential conflict of interest, Membership, Website, Note;
 - Present in the Europe Elects polling coverage, Reference, Presence / Experience, Notable commissioners;
-- Reason not republished (optional);
 - Address and Email address.
 
 Address and Email address are published because they were public on the previous Truth in Polling page. Delete their two lines in `ALIASES` to stop publishing them. "Other", and any column not listed, is never published.
