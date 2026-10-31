@@ -14,7 +14,8 @@ Europe Elects' database of pollsters as an interactive page, in the same style a
   - the accuracy review, the website, and expandable details: methodology, conflict of interest, notes, memberships, contact.
 - **Name struck through in red**: the pollster isn't in Europe Elects' polling coverage.
 - **Yellow warning sign**: a potential conflict of interest is documented. "Not identified", "None" and similar entries don't trigger it.
-- **Filters**: search, country, in our coverage only, conflicts of interest only.
+- **Filters**: search, country, in our coverage only, potential conflicts of interest only.
+- **Russia, Belarus, Azerbaijan**: when one is selected, the warning about authoritarian regimes is framed in red and repeated above that country's pollsters.
 - **Bottom of the page**: legal disclaimer, rights and preferred citation (expandable), plus partners and funders.
 
 ## What is published
@@ -30,10 +31,10 @@ Tabs are read when their name is a country name (e.g. `Germany`) or an ISO-2 cod
 
 ## Set up
 
-1. Create the repository `Europe-Elects/truth-in-polling`, or another name, and upload these files, including the `.github/workflows` and `scripts` folders.
+1. Create the repository `Europe-Elects/pollster_database` and upload these files, including the `.github/workflows` and `scripts` folders.
 2. **Settings → Secrets and variables → Actions → New repository secret**:
    - name: `POLLSTER_SHEET_ID`
-   - value: `15JEb1nz0I1Xj0ZYvBAg8tcHWZRloQF3b6Kn5HRg38ZM`
+   - value: the ID from the sheet's address (the long code between `/d/` and `/edit`)
 
    This keeps the sheet's address out of the public code.
 3. **Settings → Pages → Source: GitHub Actions**.
@@ -44,7 +45,7 @@ The Google Sheet must be viewable by "anyone with the link", so the workflow can
 ## WordPress embed
 
 ```html
-<iframe id="ee-pollsters" title="Truth in Polling – Europe Elects" src="https://europe-elects.github.io/truth-in-polling/" scrolling="no" style="width:0;min-width:100%;border:0" height="2400"></iframe>
+<iframe id="ee-pollsters" title="Truth in Polling – Europe Elects" src="https://europe-elects.github.io/pollster_database/" scrolling="no" style="width:0;min-width:100%;border:0" height="2400"></iframe>
 <script>
 window.addEventListener("message",function(e){var d=e.data&&e.data["datawrapper-height"];if(!d)return;document.querySelectorAll("iframe").forEach(function(f){if(f.contentWindow===e.source)for(var k in d)f.style.height=d[k]+"px"})});
 </script>

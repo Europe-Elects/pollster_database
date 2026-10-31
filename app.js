@@ -139,7 +139,7 @@ async function renderMap() {
 // ---------- stats ----------
 function renderStats(rows) {
   const firms = new Set(rows.map(r => r._key)).size, cov = rows.filter(r => r._cov === "yes").length, coi = rows.filter(r => r._coi).length;
-  $("#stats").innerHTML = [[fmt(firms), firms === 1 ? "pollster" : "pollsters"], [rows.length ? Math.round(100 * cov / rows.length) + "%" : "–", "in our coverage"], [fmt(coi), "conflict flags"]]
+  $("#stats").innerHTML = [[fmt(firms), firms === 1 ? "pollster" : "pollsters"], [rows.length ? Math.round(100 * cov / rows.length) + "%" : "–", "in our coverage"], [fmt(coi), coi === 1 ? "potential conflict of interest" : "potential conflicts of interest"]]
     .map(([v, l]) => `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
 }
 
@@ -184,7 +184,7 @@ function renderList() {
   const order = (a, b) => (a._cov === "no") - (b._cov === "no") || a[F.name].localeCompare(b[F.name], "en", { sensitivity: "base" });
   $("#list").innerHTML = groups.length ? groups.map(g => {
     const cov = g.rs.filter(r => r._cov === "yes").length, coi = g.rs.filter(r => r._coi).length;
-    return `<section class="country" id="c-${esc(g.k)}"><h2>${esc(g.name)}<small>${g.rs.length} ${g.rs.length === 1 ? "pollster" : "pollsters"} · ${cov} in our coverage${coi ? ` · ${coi} conflict ${coi === 1 ? "flag" : "flags"}` : ""}</small></h2>
+    return `<section class="country" id="c-${esc(g.k)}"><h2>${esc(g.name)}<small>${g.rs.length} ${g.rs.length === 1 ? "pollster" : "pollsters"} · ${cov} in our coverage${coi ? ` · ${coi} potential ${coi === 1 ? "conflict" : "conflicts"} of interest` : ""}</small></h2>${AUTHORITARIAN.includes(g.k) ? AUTH_NOTE : ""}
       <div class="cards">${g.rs.slice().sort(order).map(r => profile(r, ALL.indexOf(r))).join("")}</div></section>`;
   }).join("") : '<div class="empty card">No pollster matches these filters.</div>';
   $("#list").querySelectorAll(".btn.more").forEach(b => (b.onclick = () => {
@@ -192,11 +192,14 @@ function renderList() {
     b.setAttribute("aria-expanded", open); b.textContent = open ? "Less ▴" : "Details ▾"; postHeight();
   }));
 }
+// Authoritarian regimes: the self-censorship warning turns red when one of them is selected, and is repeated above its pollsters.
+const AUTHORITARIAN = ["RU", "BY", "AZ"];
+const AUTH_NOTE = `<div class="warning alert"><svg class="warn" aria-hidden="true"><use href="#i-warn"/></svg><p><strong>Polling has structural limits in this country.</strong> In <a href="https://v-dem.net/data_analysis/MapGraph/" target="_blank" rel="noopener">authoritarian regimes</a>, even technically rigorous surveys may fail to capture genuine public opinion due to respondent self-censorship.</p></div>`;
 function setCountry(iso, scroll) {
   state.country = iso; $("#f-country").value = iso; render();
   if (scroll && iso) { const el = document.getElementById("c-" + iso); if (el && !EMBEDDED) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
 }
-function render() { renderMap(); renderList(); setTimeout(postHeight, 50); }
+function render() { $("#w-auth").classList.toggle("alert", AUTHORITARIAN.includes(state.country)); renderMap(); renderList(); setTimeout(postHeight, 50); }
 
 // ---------- embedding (WordPress iframe) ----------
 const EMBEDDED = window.self !== window.top;
