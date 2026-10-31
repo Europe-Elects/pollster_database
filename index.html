@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pollster Database</title>
+<title>Truth in Polling – Europe Elects</title>
 <meta name="description" content="Who is behind the polls? Europe Elects' guide to self-described polling companies across Europe.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Advent+Pro:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=20261031c">
+<link rel="stylesheet" href="style.css?v=20261031d">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -28,7 +28,7 @@
 
 <header class="top">
   <div class="wrap">
-    <h1>Pollster Database (2025)</h1>
+    <h1>Truth in Polling</h1>
     <p class="tagline">Who is behind the polls?</p>
     <p class="stamp" id="data-stamp">updated 1 May 2025</p>
   </div>
@@ -63,8 +63,8 @@
     <div class="card key">
       <h2>How to read the profiles</h2>
       <ul class="key-list">
-        <li><span class="k-name">Forsa</span> In Europe Elects' polling coverage</li>
-        <li><span class="k-name out">Civey</span> Not (or no longer) in our coverage</li>
+        <li><span class="k-name">Forsa</span> Polls republished by Europe Elects</li>
+        <li><span class="k-name out">Civey</span> Not republished by Europe Elects: the organisation does not currently meet our <a href="https://europeelects.eu/wp-content/uploads/2025/08/EE_Truth-in-Polling-Final-Public-Report.pdf" target="_blank" rel="noopener">inclusion criteria</a></li>
         <li><svg class="warn" aria-hidden="true"><use href="#i-warn"/></svg> Potential conflict of interest documented</li>
         <li class="k-methods"><span class="m"><svg><use href="#i-phone"/></svg>Telephone</span><span class="m"><svg><use href="#i-person"/></svg>Face-to-face</span><span class="m"><svg><use href="#i-laptop"/></svg>Online</span><span class="m"><svg><use href="#i-paper"/></svg>Paper</span><span class="m"><svg><use href="#i-robot"/></svg>Automated calls</span><span class="m"><svg><use href="#i-mix"/></svg>Mixed mode</span></li>
       </ul>
@@ -75,7 +75,7 @@
   <section class="toolbar" role="search">
     <input id="q" type="search" placeholder="Search a pollster, a person, a method…" aria-label="Search pollsters">
     <select id="f-country" aria-label="Country"><option value="">All countries</option></select>
-    <button type="button" class="tog" id="t-cov" aria-pressed="false">In our coverage only</button>
+    <button type="button" class="tog" id="t-cov" aria-pressed="false">Republished by Europe Elects</button>
     <button type="button" class="tog" id="t-coi" aria-pressed="false"><svg class="warn" aria-hidden="true"><use href="#i-warn"/></svg>Potential conflicts of interest</button>
     <button type="button" class="tog" id="reset">Reset</button>
   </section>
@@ -103,6 +103,6 @@
   </section>
 </main>
 <div id="tip" class="tip" role="tooltip"></div>
-<script src="app.js?v=20261031c"></script>
+<script src="app.js?v=20261031d"></script>
 </body>
 </html>

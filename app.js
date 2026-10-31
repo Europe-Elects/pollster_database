@@ -131,7 +131,7 @@ async function renderMap() {
     .classed("has", d => !!cnt.get(isoOf(d))).classed("sel", d => state.country && isoOf(d) === state.country)
     .on("mousemove", (ev, d) => { const iso = isoOf(d), n = cnt.get(iso) || 0; if (!n) return hideTip();
       const rs = ALL.filter(r => r._iso === iso && passes(r, false));
-      showTip(ev, `<b>${esc(nameOfIso(iso))}</b><br><span class="mu">${n} ${n === 1 ? "pollster" : "pollsters"} · ${rs.filter(r => r._cov === "yes").length} in our coverage</span>`); })
+      showTip(ev, `<b>${esc(nameOfIso(iso))}</b><br><span class="mu">${n} ${n === 1 ? "pollster" : "pollsters"} · ${rs.filter(r => r._cov === "yes").length} republished by us</span>`); })
     .on("mouseleave", hideTip)
     .on("click", (ev, d) => { const iso = isoOf(d); if (!cnt.get(iso)) return; setCountry(state.country === iso ? "" : iso, true); });
   svg.selectAll("path.c.sel").raise();
@@ -140,7 +140,7 @@ async function renderMap() {
 // ---------- stats ----------
 function renderStats(rows) {
   const firms = new Set(rows.map(r => r._key)).size, cov = rows.filter(r => r._cov === "yes").length, coi = rows.filter(r => r._coi).length;
-  $("#stats").innerHTML = [[fmt(firms), firms === 1 ? "pollster" : "pollsters"], [rows.length ? Math.round(100 * cov / rows.length) + "%" : "–", "in our coverage"], [fmt(coi), coi === 1 ? "potential conflict of interest" : "potential conflicts of interest"]]
+  $("#stats").innerHTML = [[fmt(firms), firms === 1 ? "pollster" : "pollsters"], [rows.length ? Math.round(100 * cov / rows.length) + "%" : "–", "republished by us"], [fmt(coi), coi === 1 ? "potential conflict of interest" : "potential conflicts of interest"]]
     .map(([v, l]) => `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
 }
 
@@ -165,7 +165,7 @@ function profile(r, i) {
       ${r._coi ? `<svg class="warn" role="img" aria-label="Potential conflict of interest"><title>Potential conflict of interest – see Details</title><use href="#i-warn"/></svg>` : ""}
       ${r._est ? `<span class="est">Est. ${esc(r._est)}</span>` : ""}
     </div>
-    ${out ? '<div class="off-label">Not in Europe Elects coverage</div>' : ""}
+    ${out ? '<div class="off-label" title="Europe Elects does not republish this organisation\'s polls: it does not currently meet our inclusion criteria.">Not republished by Europe Elects</div>' : ""}
     ${r._modes.length ? `<div class="methods">${r._modes.map(m => `<span class="m">${icon(m.id)}${m.label}</span>`).join("")}</div>` : ""}
     ${r._sample || r._moe ? `<div class="facts">${r._sample ? `<div><b>${esc(r._sample)}</b> <span>respondents</span></div>` : ""}${r._moe ? `<div><b>${esc(r._moe)}</b> <span>margin of error</span></div>` : ""}</div>` : ""}
     ${known(r[F.people]) ? `<p class="people">${esc(r[F.people])}</p>` : ""}
@@ -185,7 +185,7 @@ function renderList() {
   const order = (a, b) => (a._cov === "no") - (b._cov === "no") || a[F.name].localeCompare(b[F.name], "en", { sensitivity: "base" });
   $("#list").innerHTML = groups.length ? groups.map(g => {
     const cov = g.rs.filter(r => r._cov === "yes").length, coi = g.rs.filter(r => r._coi).length;
-    return `<section class="country" id="c-${esc(g.k)}"><h2>${esc(g.name)}<small>${g.rs.length} ${g.rs.length === 1 ? "pollster" : "pollsters"} · ${cov} in our coverage${coi ? ` · ${coi} potential ${coi === 1 ? "conflict" : "conflicts"} of interest` : ""}</small></h2>${AUTHORITARIAN.includes(g.k) ? AUTH_NOTE : ""}
+    return `<section class="country" id="c-${esc(g.k)}"><h2>${esc(g.name)}<small>${g.rs.length} ${g.rs.length === 1 ? "pollster" : "pollsters"} · ${cov} republished by us${coi ? ` · ${coi} potential ${coi === 1 ? "conflict" : "conflicts"} of interest` : ""}</small></h2>${AUTHORITARIAN.includes(g.k) ? AUTH_NOTE : ""}
       <div class="cards">${g.rs.slice().sort(order).map(r => profile(r, ALL.indexOf(r))).join("")}</div></section>`;
   }).join("") : '<div class="empty card">No pollster matches these filters.</div>';
   $("#list").querySelectorAll(".btn.more").forEach(b => (b.onclick = () => {
@@ -211,7 +211,7 @@ function postHeight() { if (EMBEDDED) parent.postMessage({ "datawrapper-height":
 async function boot() {
   let data;
   try { data = await load(); } catch (e) { $("#data-stamp").textContent = "Could not load the data"; return; }
-  ALL = data.rows.map(normalise);
+  ALL = data.rows.filter(r => !/^(calculations?|summary|sources|data|template|readme|lists?)$/i.test(clean(r[F.tab]))).map(normalise);
   const nC = new Set(ALL.map(r => r._iso || r._country)).size;
   $("#data-stamp").textContent = `${fmt(new Set(ALL.map(r => r._key)).size)} self-described polling companies in ${nC} ${nC === 1 ? "country" : "countries"} · updated ${DATA_DATE}`;
   const countries = [...d3.rollup(ALL, v => v[0]._country, r => r._iso || r._country)].sort((a, b) => a[1].localeCompare(b[1], "en", { sensitivity: "base" }));
