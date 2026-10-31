@@ -1,6 +1,7 @@
 /* Truth in Polling — Europe Elects. Reads data/pollsters.csv (built daily from the pollster sheet by the GitHub Action). */
 (() => {
 const SOURCES = ["data/pollsters.csv"];
+const DATA_DATE = "1 May 2025"; // date of the research data shown under the title (not the daily rebuild)
 const F = { tab: "Tab", name: "Pollster name", year: "Registration year", method: "Methodology", people: "Key people", acc: "Accuracy",
   coi: "Potential conflict of interest", member: "Membership", web: "Website", note: "Note", cov: "Coverage", ref: "Reference",
   presence: "Presence / Experience", clients: "Notable commissioners", addr: "Address", mail: "Email address" };
@@ -212,7 +213,7 @@ async function boot() {
   try { data = await load(); } catch (e) { $("#data-stamp").textContent = "Could not load the data"; return; }
   ALL = data.rows.map(normalise);
   const nC = new Set(ALL.map(r => r._iso || r._country)).size;
-  $("#data-stamp").textContent = `${fmt(new Set(ALL.map(r => r._key)).size)} polling companies in ${nC} ${nC === 1 ? "country" : "countries"}${data.stamp ? " · updated " + new Date(data.stamp).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : ""}`;
+  $("#data-stamp").textContent = `${fmt(new Set(ALL.map(r => r._key)).size)} self-described polling companies in ${nC} ${nC === 1 ? "country" : "countries"} · updated ${DATA_DATE}`;
   const countries = [...d3.rollup(ALL, v => v[0]._country, r => r._iso || r._country)].sort((a, b) => a[1].localeCompare(b[1], "en", { sensitivity: "base" }));
   $("#f-country").innerHTML = '<option value="">All countries</option>' + countries.map(([k, n]) => `<option value="${esc(k)}">${esc(n)}</option>`).join("");
   $("#f-country").onchange = e => setCountry(e.target.value);
