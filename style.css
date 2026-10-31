@@ -73,7 +73,17 @@ h1 { display: inline-block; margin: 0; padding: 10px 32px; background: var(--nav
 .p-name.out { color: #6B5A5C; }
 .p-head .warn { width: 22px; height: 22px; margin-top: 2px; cursor: help; }
 .est { margin-left: auto; flex: none; padding: 2px 9px; border-radius: 999px; background: var(--chip); color: var(--muted); font-size: 13px; font-weight: 700; white-space: nowrap; }
-.off-label { margin-top: -6px; color: var(--red); font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.off-label { display: inline-flex; align-items: center; gap: 6px; cursor: help; outline: none; margin-top: -6px; color: var(--red); font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.off-wrap { position: relative; margin-top: -6px; }
+.off-wrap .off-label { margin-top: 0; }
+.off-i { display: inline-grid; place-items: center; width: 15px; height: 15px; border: 1.5px solid currentColor; border-radius: 50%; font: italic 700 10px/1 Georgia, serif; text-transform: none; letter-spacing: 0; }
+.off-pop { position: absolute; left: 0; top: calc(100% + 6px); z-index: 20; width: min(320px, 85vw); padding: 10px 12px; background: #fff; color: var(--ink);
+  border: 1px solid var(--line); border-top: 3px solid var(--red); border-radius: 6px; box-shadow: 0 6px 20px rgba(0,0,0,.12);
+  font-size: 14px; font-weight: 400; line-height: 1.45; letter-spacing: 0; text-transform: none; visibility: hidden; opacity: 0; transition: opacity .12s; }
+.off-pop::before { content: ""; position: absolute; left: 0; right: 0; top: -12px; height: 12px; } /* keeps the popup open while moving the mouse into it */
+.off-pop a { color: var(--blue); font-weight: 600; }
+.off-wrap:hover .off-pop, .off-wrap:focus-within .off-pop { visibility: visible; opacity: 1; }
+.cards .p:has(.off-wrap:hover), .cards .p:has(.off-wrap:focus-within) { z-index: 21; }
 .methods { display: flex; flex-wrap: wrap; gap: 6px; }
 .m { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px; border-radius: 999px; background: var(--tag); color: var(--tagInk); font-size: 14px; font-weight: 600; }
 .m svg { width: 15px; height: 15px; }

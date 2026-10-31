@@ -164,7 +164,8 @@ function renderStats(rows) {
 }
 
 // ---------- profiles ----------
-const OFF_TIP = "Europe Elects does not republish these polls: we could not confirm that they meet our standards for transparency and representativeness.";
+const STANDARDS_URL = "https://europeelects.eu/wp-content/uploads/2025/08/EE_Truth-in-Polling-Final-Public-Report.pdf";
+const OFF_POP = `Europe Elects does not republish these polls. We could not confirm that its polls meet <a href="${STANDARDS_URL}" target="_blank" rel="noopener">our standards</a>: a disclosed methodology, a representative sample, a verifiable organisation and a record of recent electoral polling.`;
 function profile(r, i) {
   const out = r._cov === "no";
   const notes = r[F.note] ? r[F.note].split(/\n|•/).map(s => s.trim()).filter(Boolean) : [];
@@ -185,7 +186,7 @@ function profile(r, i) {
       ${r._coi ? `<svg class="warn" role="img" aria-label="Potential conflict of interest"><title>Potential conflict of interest – see Details</title><use href="#i-warn"/></svg>` : ""}
       ${r._est ? `<span class="est">Est. ${esc(r._est)}</span>` : ""}
     </div>
-    ${out ? `<div class="off-label" title="${esc(OFF_TIP)}">Not republished by Europe Elects</div>` : ""}
+    ${out ? `<div class="off-wrap"><span class="off-label" tabindex="0" aria-describedby="off-${i}">Not republished by Europe Elects <span class="off-i" aria-hidden="true">i</span></span><span class="off-pop" role="tooltip" id="off-${i}">${OFF_POP}</span></div>` : ""}
     ${r._modes.length ? `<div class="methods">${r._modes.map(m => `<span class="m">${icon(m.id)}${m.label}</span>`).join("")}</div>` : ""}
     ${r._sample || r._moe ? `<div class="facts">${r._sample ? `<div><b>${esc(r._sample)}</b> <span>respondents</span></div>` : ""}${r._moe ? `<div><b>${esc(r._moe)}</b> <span>margin of error</span></div>` : ""}</div>` : ""}
     ${known(r[F.people]) ? `<p class="people">${esc(r[F.people])}</p>` : ""}
