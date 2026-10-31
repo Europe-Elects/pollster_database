@@ -53,25 +53,6 @@ const host = u => { try { return new URL(u).hostname.replace(/^www\./, ""); } ca
 // Links in the text are shown as their site name ("spiegel.de ↗"), not as long URLs.
 const linkify = s => esc(s).replace(/https?:\/\/[^\s<>"()]+[^\s<>"().,;:]/g, u => `<a href="${u}" target="_blank" rel="noopener">${esc(host(u))}&nbsp;↗</a>`);
 const mailify = s => linkify(s).replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, m => `<a href="mailto:${m}">${m}</a>`);
-// Counting organisations: rows with the same name (accents kept, so Medián ≠ Median) are one company,
-// unless their websites differ (TEAM in North Macedonia ≠ TEAM in Türkiye). Rows without a website join their name.
-// SEPARATE: same name and site name, but independent companies per country. ONE_COMPANY: one company despite different sites.
-const SEPARATE = ["mediana", "gallup", "imas"];
-const ONE_COMPANY = ["verian"];
-const nameKey = n => clean(n).toLowerCase().normalize("NFC").replace(/\s+/g, " ");
-const siteLabel = u => { const p = host(u).split("."); return p.length > 2 && /^(co|com|org|net|ac|gov)$/.test(p[p.length - 2]) ? p[p.length - 3] : p.length > 1 ? p[p.length - 2] : ""; };
-function countOrgs(rows) {
-  const g = new Map();
-  for (const r of rows) {
-    const n = nameKey(r[F.name]);
-    const id = SEPARATE.includes(n) ? r._iso || r._country : ONE_COMPANY.includes(n) ? "" : r._site ? siteLabel(r._site) : "";
-    if (!g.has(n)) g.set(n, new Set());
-    g.get(n).add(id);
-  }
-  let total = 0;
-  for (const ids of g.values()) { const real = [...ids].filter(Boolean).length; total += Math.max(1, real); }
-  return total;
-}
 const icon = (id, cls = "") => `<svg class="${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
 
 let ALL = [], state = { q: "", country: "", cov: false, coi: false };
@@ -176,7 +157,8 @@ async function renderMap() {
 
 // ---------- stats ----------
 function renderStats(rows) {
-  const firms = countOrgs(rows), cov = rows.filter(r => r._cov === "yes").length, coi = rows.filter(r => r._coi).length;
+  const firms = rows.length, // one per row (Ipsos in 20 countries = 20)
+    cov = rows.filter(r => r._cov === "yes").length, coi = rows.filter(r => r._coi).length;
   $("#stats").innerHTML = [[fmt(firms), firms === 1 ? "self-identified pollster" : "self-identified pollsters"], [rows.length ? Math.round(100 * cov / rows.length) + "%" : "–", "republished by us"], [fmt(coi), coi === 1 ? "potential conflict of interest" : "potential conflicts of interest"]]
     .map(([v, l]) => `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
 }
@@ -251,7 +233,7 @@ async function boot() {
   try { data = await load(); } catch (e) { $("#data-stamp").textContent = "Could not load the data"; return; }
   ALL = data.rows.filter(r => !/^(calculations?|summary|sources|data|template|readme|lists?)$/i.test(clean(r[F.tab]))).map(normalise);
   const nC = new Set(ALL.map(r => r._iso || r._country)).size;
-  $("#data-stamp").textContent = `${fmt(countOrgs(ALL))} self-described polling companies in ${nC} ${nC === 1 ? "country" : "countries"} · updated ${DATA_DATE}`;
+  $("#data-stamp").textContent = `${fmt(ALL.length)} self-described polling companies in ${nC} ${nC === 1 ? "country" : "countries"} · updated ${DATA_DATE}`;
   const countries = [...d3.rollup(ALL, v => v[0]._country, r => r._iso || r._country)].sort((a, b) => a[1].localeCompare(b[1], "en", { sensitivity: "base" }));
   $("#f-country").innerHTML = '<option value="">All countries</option>' + countries.map(([k, n]) => `<option value="${esc(k)}">${esc(n)}</option>`).join("");
   $("#f-country").onchange = e => setCountry(e.target.value);
