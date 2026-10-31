@@ -172,7 +172,7 @@ async function renderMap() {
     .classed("has", d => !!cnt.get(isoOf(d))).classed("sel", d => state.country && isoOf(d) === state.country)
     .on("mousemove", (ev, d) => { const iso = isoOf(d), n = cnt.get(iso) || 0; if (!n) return hideTip();
       const rs = ALL.filter(r => r._iso === iso && passes(r, false));
-      showTip(ev, `<b>${esc(nameOfIso(iso))}</b><br><span class="mu">${n} ${n === 1 ? "pollster" : "pollsters"} · ${rs.filter(r => r._cov === "yes").length} republished by us</span>`); })
+      showTip(ev, `<b>${esc(nameOfIso(iso))}</b><br><span class="mu">${n} ${n === 1 ? "self-identified pollster" : "self-identified pollsters"} · ${rs.filter(r => r._cov === "yes").length} republished by us</span>`); })
     .on("mouseleave", hideTip)
     .on("click", (ev, d) => { const iso = isoOf(d); if (!cnt.get(iso)) return; setCountry(state.country === iso ? "" : iso, true); });
   svg.selectAll("path.c.sel").raise();
@@ -181,7 +181,7 @@ async function renderMap() {
 // ---------- stats ----------
 function renderStats(rows) {
   const firms = new Set(rows.map(r => r._key)).size, cov = rows.filter(r => r._cov === "yes").length, coi = rows.filter(r => r._coi).length;
-  $("#stats").innerHTML = [[fmt(firms), firms === 1 ? "pollster" : "pollsters"], [rows.length ? Math.round(100 * cov / rows.length) + "%" : "–", "republished by us"], [fmt(coi), coi === 1 ? "potential conflict of interest" : "potential conflicts of interest"]]
+  $("#stats").innerHTML = [[fmt(firms), firms === 1 ? "self-identified pollster" : "self-identified pollsters"], [rows.length ? Math.round(100 * cov / rows.length) + "%" : "–", "republished by us"], [fmt(coi), coi === 1 ? "potential conflict of interest" : "potential conflicts of interest"]]
     .map(([v, l]) => `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
 }
 
@@ -228,7 +228,7 @@ function renderList() {
   const order = (a, b) => (a._cov === "no") - (b._cov === "no") || a[F.name].localeCompare(b[F.name], "en", { sensitivity: "base" });
   $("#list").innerHTML = groups.length ? groups.map(g => {
     const cov = g.rs.filter(r => r._cov === "yes").length, coi = g.rs.filter(r => r._coi).length;
-    return `<section class="country" id="c-${esc(g.k)}"><h2>${esc(g.name)}<small>${g.rs.length} ${g.rs.length === 1 ? "pollster" : "pollsters"} · ${cov} republished by us${coi ? ` · ${coi} potential ${coi === 1 ? "conflict" : "conflicts"} of interest` : ""}</small></h2>${AUTHORITARIAN.includes(g.k) ? AUTH_NOTE : ""}
+    return `<section class="country" id="c-${esc(g.k)}"><h2>${esc(g.name)}<small>${g.rs.length} ${g.rs.length === 1 ? "self-identified pollster" : "self-identified pollsters"} · ${cov} republished by us${coi ? ` · ${coi} potential ${coi === 1 ? "conflict" : "conflicts"} of interest` : ""}</small></h2>${AUTHORITARIAN.includes(g.k) ? AUTH_NOTE : ""}
       <div class="cards">${g.rs.slice().sort(order).map(r => profile(r, ALL.indexOf(r))).join("")}</div></section>`;
   }).join("") : '<div class="empty card">No pollster matches these filters.</div>';
   $("#list").querySelectorAll(".btn.more").forEach(b => (b.onclick = () => {
