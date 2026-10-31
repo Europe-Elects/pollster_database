@@ -18,17 +18,19 @@ const BY_NAME = { XK: "Kosovo" };
 const REGION = (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }); } catch { return null; } })();
 const ALIASES = { "czech republic": "CZ", russia: "RU", turkey: "TR", "türkiye": "TR", turkiye: "TR", macedonia: "MK", "north macedonia": "MK",
   moldova: "MD", kosovo: "XK", uk: "GB", "great britain": "GB", "united kingdom": "GB", bosnia: "BA", "bosnia and herzegovina": "BA",
-  "holy see": "VA", aland: "AX", "åland": "AX", "åland islands": "AX", "faroe islands": "FO", eu: "EU", "european union": "EU" };
+  "holy see": "VA", france: "FR", serbia: "RS", england: "GB", scotland: "GB", wales: "GB", "northern ireland": "GB", aland: "AX", "åland": "AX", "åland islands": "AX", "faroe islands": "FO", eu: "EU", "european union": "EU" };
+// Old or reserved codes that browsers also name "United Kingdom", "France", "Serbia"…: never use them.
+const OLD_CODES = new Set(["UK", "FX", "CS", "YU", "SU", "DD", "ZR", "TP", "BU", "NT", "AN", "QO", "EZ", "UN", "XA", "XB"]);
 const NAME_TO_ISO = (() => {
   const m = {};
   if (REGION) for (let a = 65; a <= 90; a++) for (let b = 65; b <= 90; b++) {
     const code = String.fromCharCode(a, b); let n; try { n = REGION.of(code); } catch { continue; }
-    if (n && n !== code) m[n.toLowerCase()] = code;
+    if (n && n !== code && !OLD_CODES.has(code) && !m[n.toLowerCase()]) m[n.toLowerCase()] = code;
   }
   return Object.assign(m, ALIASES);
 })();
 const clean = v => (v ?? "").toString().replace(/[​-‍﻿]/g, "").trim();
-const isoOfTab = t => { const s = clean(t); return /^[A-Za-z]{2}$/.test(s) ? s.toUpperCase() : NAME_TO_ISO[s.toLowerCase()] || ""; };
+const isoOfTab = t => { const s = clean(t), l = s.toLowerCase(); if (ALIASES[l]) return ALIASES[l]; return /^[A-Za-z]{2}$/.test(s) ? s.toUpperCase() : NAME_TO_ISO[l] || ""; };
 const nameOfIso = (iso, fb) => { if (iso === "EU") return "European Union"; try { const n = REGION && REGION.of(iso); if (n && n !== iso) return n; } catch {} return fb || iso; };
 
 // Data-collection modes → icon (several per pollster)
