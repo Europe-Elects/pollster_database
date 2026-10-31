@@ -34,6 +34,8 @@ h1 { display: inline-block; margin: 0; padding: 10px 32px; background: var(--nav
 .key h2 { margin: 0 0 10px; font-size: 15px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--blue); }
 .key-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 16px; }
 .key-list li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.key-list li.k-long { flex-wrap: nowrap; align-items: flex-start; }
+.key-list li.k-long > span:last-child { flex: 1; min-width: 0; line-height: 1.45; }
 .k-name { min-width: 64px; font-weight: 700; font-size: 18px; }
 .k-name.out, .p-name.out { text-decoration: line-through; text-decoration-color: var(--red); text-decoration-thickness: 2.5px; }
 .k-methods { gap: 6px 12px !important; margin-top: 4px; }
@@ -71,6 +73,8 @@ h1 { display: inline-block; margin: 0; padding: 10px 32px; background: var(--nav
 .p-name.out { color: #6B5A5C; }
 .p-head .warn { width: 22px; height: 22px; margin-top: 2px; cursor: help; }
 .est { margin-left: auto; flex: none; padding: 2px 9px; border-radius: 999px; background: var(--chip); color: var(--muted); font-size: 13px; font-weight: 700; white-space: nowrap; }
+.why { display: flex; flex-wrap: wrap; gap: 4px; margin-top: -4px; }
+.why span { font-size: 12px; font-weight: 600; color: var(--red); border: 1px solid currentColor; border-radius: 3px; padding: 1px 6px; cursor: help; }
 .off-label { margin-top: -6px; color: var(--red); font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .methods { display: flex; flex-wrap: wrap; gap: 6px; }
 .m { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px; border-radius: 999px; background: var(--tag); color: var(--tagInk); font-size: 14px; font-weight: 600; }

@@ -68,6 +68,47 @@ async function load() {
   }
   throw new Error("No data");
 }
+// Margin of error: the first plausible value (1–15 points) after "margin of error".
+// Skips confidence levels ("95%", "99%") that the methodology text often mentions in the same sentence.
+function moeOf(m) {
+  if (/no margin of error|margin of error (?:is )?not (?:given|stated)/i.test(m)) return "not given";
+  const at = m.search(/margin of error|\bMoE\b/i);
+  if (at < 0) return "";
+  const re = /(\d+(?:[.,]\d+)?(?:\s*[-–]\s*\d+(?:[.,]\d+)?)?)\s*(%\s*p\b|%p\b|%|percentage points?|points?\b|pts?\b)(?!\s*(?:confidence|level|CI\b|c\.i\.))/gi;
+  const part = m.slice(at, at + 160);
+  let x;
+  while ((x = re.exec(part))) {
+    const v = parseFloat(x[1].split(/[-–]/).pop().replace(",", "."));
+    if (v >= 1 && v <= 15) {
+      const unit = /point|pt/i.test(x[2]) ? " pts" : /p/i.test(x[2]) ? "%p" : "%";
+      return "±" + x[1].replace(/\s+/g, "") + unit;
+    }
+  }
+  return "";
+}
+
+// Why a pollster is not republished. A "Reason not republished" column in the sheet wins;
+// otherwise the reason is read from what the researchers wrote in the notes and other fields.
+const REASONS = [
+  ["Organisation not verifiable", "We could not verify that this organisation exists or carries out its own fieldwork.",
+    /non[- ]?existing|does(?:n'?t| not) exist|no indication (?:that )?(?:this|the|it)[^.]{0,30}exists?|could not (?:be )?(?:found|verified|identified)|not a pollster|fake poll|fictitious/i],
+  ["Methodology not disclosed", "The organisation does not disclose how its polls are conducted or weighted.",
+    /black box|didn'?t provide any information|did not provide (?:any )?information|no information (?:provided|available|on (?:the )?method)|doesn'?t answer|does not answer|did not (?:respond|answer)|no response|(?:algorithm|weighting|method\w*)[^.]{0,40}not (?:been )?(?:published|disclosed)|not disclose|undisclosed|lack of transparency|not transparent/i],
+  ["Sample not representative", "Its samples are self-selected or otherwise not shown to be representative.",
+    /self[- ]?select|non[- ]?probability|non[- ]?representative|not representative|opt[- ]in|questions? (?:the )?representativ/i],
+  ["No recent electoral polling", "The organisation has no recent record of pre-election polling.",
+    /not active|inactive|no longer (?:active|publish|conduct)|ceased|no (?:pre[- ]election )?track record|no record in pre[- ]election|no pre[- ]election polls/i],
+];
+function reasonsOf(o) {
+  const given = clean(o["Reason not republished"]);
+  if (given) return given.split(/[;\n•]|,\s*(?=[A-Z])/).map(s => s.trim()).filter(Boolean).map(label => {
+    const k = REASONS.find(([l]) => l.toLowerCase() === label.toLowerCase()); return { label: k ? k[0] : label, text: k ? k[1] : "" }; });
+  const text = [o[F.note], o[F.method], o[F.acc], o[F.presence], o[F.people], o[F.ref]].join(" \n ");
+  let hits = REASONS.filter(([, , re]) => re.test(text));
+  if (hits[0] && hits[0][0] === "Organisation not verifiable") hits = hits.slice(0, 1); // a non-existent pollster needs no further reason
+  return hits.map(([label, t]) => ({ label, text: t }));
+}
+
 function normalise(r) {
   const o = {};
   for (const k of Object.keys(r)) o[k] = clean(r[k]);
@@ -80,14 +121,14 @@ function normalise(r) {
   const m = o[F.method];
   const ss = m.match(/sample sizes?\b[^.;]*?(\d[\d.,]*(?:\s*[-–]\s*\d[\d.,]*)?)/i);
   o._sample = ss ? ss[1].replace(/[.,]+$/, "").replace(/\s*[-–]\s*/, "–") : "";
-  if (/no margin of error|margin of error (?:is )?not (?:given|stated)/i.test(m)) o._moe = "not given";
-  else { const mm = m.match(/margin of error[^.;\d]*?(\d[\d.,]*\s*(?:%\s*p|%p|%|percentage points?))/i); o._moe = mm ? "±" + mm[1].replace(/\s+/g, "").replace(/percentagepoints?/, " pts") : ""; }
+  o._moe = moeOf(m);
   o._cov = /^y/i.test(o[F.cov]) ? "yes" : /^n/i.test(o[F.cov]) ? "no" : "";
   o._coi = known(o[F.coi]);
+  o._why = o._cov === "no" ? reasonsOf(o) : [];
   o._accUrl = (o[F.acc].match(/https?:\/\/\S+/) || [])[0] || "";
   o._site = (o[F.web].match(/https?:\/\/[^\s,;]+/) || [])[0] || (/^[\w-]+(\.[\w-]+)+/.test(o[F.web]) ? "https://" + o[F.web].split(/[\s,;]/)[0] : "");
   o._key = keyOf(o[F.name]);
-  o._search = [o[F.name], o[F.people], o[F.method], o[F.member], o[F.note], o[F.coi], o[F.clients], o._country].join(" ").toLowerCase();
+  o._search = [o[F.name], o[F.people], o[F.method], o[F.member], o[F.note], o[F.coi], o[F.clients], o._country, ...o._why.map(w => w.label)].join(" ").toLowerCase();
   return o;
 }
 
@@ -145,6 +186,7 @@ function renderStats(rows) {
 }
 
 // ---------- profiles ----------
+const OFF_TIP = "Europe Elects does not republish these polls: we could not confirm that they meet our standards for transparency and representativeness.";
 function profile(r, i) {
   const out = r._cov === "no";
   const notes = r[F.note] ? r[F.note].split(/\n|•/).map(s => s.trim()).filter(Boolean) : [];
@@ -165,7 +207,8 @@ function profile(r, i) {
       ${r._coi ? `<svg class="warn" role="img" aria-label="Potential conflict of interest"><title>Potential conflict of interest – see Details</title><use href="#i-warn"/></svg>` : ""}
       ${r._est ? `<span class="est">Est. ${esc(r._est)}</span>` : ""}
     </div>
-    ${out ? '<div class="off-label" title="Europe Elects does not republish this organisation\'s polls: it does not currently meet our inclusion criteria.">Not republished by Europe Elects</div>' : ""}
+    ${out ? `<div class="off-label" title="${esc(OFF_TIP)}">Not republished by Europe Elects</div>` : ""}
+    ${r._why.length ? `<div class="why">${r._why.map(w => `<span${w.text ? ` title="${esc(w.text)}"` : ""}>${esc(w.label)}</span>`).join("")}</div>` : ""}
     ${r._modes.length ? `<div class="methods">${r._modes.map(m => `<span class="m">${icon(m.id)}${m.label}</span>`).join("")}</div>` : ""}
     ${r._sample || r._moe ? `<div class="facts">${r._sample ? `<div><b>${esc(r._sample)}</b> <span>respondents</span></div>` : ""}${r._moe ? `<div><b>${esc(r._moe)}</b> <span>margin of error</span></div>` : ""}</div>` : ""}
     ${known(r[F.people]) ? `<p class="people">${esc(r[F.people])}</p>` : ""}
