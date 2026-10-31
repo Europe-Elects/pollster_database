@@ -1,0 +1,51 @@
+name: Refresh data & deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "41 4 * * *"   # daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install openpyxl
+      - name: Build the data (summary CSV in the repository; the Google Sheet only if the CSV is missing)
+        env:
+          POLLSTER_SHEET_ID: ${{ secrets.POLLSTER_SHEET_ID }}
+        run: |
+          mkdir -p site/data
+          if [ -f data/eetip-summary.csv ]; then
+            python3 scripts/build_data.py site/data/pollsters.csv --csv data/eetip-summary.csv
+          else
+            python3 scripts/build_data.py site/data/pollsters.csv
+          fi
+          cp index.html style.css app.js site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
