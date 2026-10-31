@@ -34,10 +34,6 @@ ALIASES = {
     "Reference": ["reference", "reference (e.g., on social media)"],
     "Presence / Experience": ["presence / experience", "presence", "experience"],
     "Notable commissioners": ["selection of notable past commissioners", "notable past commissioners", "commissioners", "clients"],
-    # Optional: why Europe Elects does not republish the pollster. Use the labels "Methodology not disclosed",
-    # "Sample not representative", "Organisation not verifiable", "No recent electoral polling" (several: separate with ";").
-    # Left empty, the page reads the reason from the notes.
-    "Reason not republished": ["reason not republished", "reason for exclusion", "exclusion reason", "reason not in coverage"],
     # Contact details: already public on the previous Truth in Polling page. Delete these two lines to stop publishing them.
     "Address": ["address", "addresses", "postal address"],
     "Email address": ["email address", "email addresses", "e-mail address", "e-mail addresses", "email", "e-mail"],
