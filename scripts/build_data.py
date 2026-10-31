@@ -81,19 +81,20 @@ def from_csv(path):
     return rows, len({r["Tab"] for r in rows})
 
 
-def write(out, rows, tabs):
+def write(out, rows, tabs, source):
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     with open(out, "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=["Tab"] + PUBLIC)
         w.writeheader()
         w.writerows(rows)
-    print(f"{len(rows)} pollsters from {tabs} countries -> {out}")
+    print(f"Source: {source} | {len(rows)} pollster rows from {tabs} countries -> {out}")
 
 
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else "site/data/pollsters.csv"
     if "--csv" in sys.argv:
-        return write(out, *from_csv(sys.argv[sys.argv.index("--csv") + 1]))
+        path = sys.argv[sys.argv.index("--csv") + 1]
+        return write(out, *from_csv(path), f"summary CSV ({path})")
     if "--xlsx" in sys.argv:
         data = open(sys.argv[sys.argv.index("--xlsx") + 1], "rb").read()
     else:
@@ -125,7 +126,7 @@ def main():
             if not get("Pollster name"):
                 continue
             rows.append({"Tab": ws.title.strip(), **{c: get(c) for c in PUBLIC}})
-    write(out, rows, tabs)
+    write(out, rows, tabs, "Google Sheet")
 
 
 if __name__ == "__main__":
